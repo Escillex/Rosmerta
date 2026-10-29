@@ -15,11 +15,21 @@ pub trait Env {
     fn new_id(&mut self) -> String;
 }
 
+/// A record a write touched, for storage to persist.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum Change {
+    Wallet(String),
+    Transaction(String),
+    Budget(String),
+}
+
 #[derive(Debug, Clone, Default)]
 pub struct Book {
     pub wallets: Vec<Wallet>,
     pub transactions: Vec<Transaction>,
     pub budgets: Vec<Budget>,
+    /// Filled by every write; storage drains it.
+    pub changes: Vec<Change>,
 }
 
 impl Book {
@@ -83,6 +93,7 @@ impl Book {
             order,
             theme: None,
         });
+        self.changes.push(Change::Wallet(id.clone()));
         if starting_balance != 0 {
             self.push_tx(env, &id, starting_balance, Kind::Adjustment, None, "Starting balance", false);
         }
@@ -97,11 +108,13 @@ impl Book {
         let Some(w) = self.wallets.iter_mut().find(|w| w.id == id && !w.deleted) else { return };
         w.deleted = true;
         w.updated_at = now;
+        self.changes.push(Change::Wallet(id.to_string()));
         if let Some(cur) = self.current_budget().map(|b| b.id.clone()) {
             let b = self.budgets.iter_mut().find(|b| b.id == cur).unwrap();
             if b.split.contains_key(id) {
                 b.split = budget::redistribute(&b.split, id, &order);
                 b.updated_at = now;
+                self.changes.push(Change::Budget(cur));
             }
         }
     }
@@ -110,6 +123,7 @@ impl Book {
         if let Some(w) = self.wallet_mut(id).filter(|w| w.name != name) {
             w.name = name.into();
             w.updated_at = env.now();
+            self.changes.push(Change::Wallet(id.to_string()));
         }
     }
 
@@ -120,6 +134,7 @@ impl Book {
         if let Some(w) = self.wallet_mut(id) {
             w.theme = (!theme.is_empty()).then_some(theme);
             w.updated_at = env.now();
+            self.changes.push(Change::Wallet(id.to_string()));
         }
     }
 
@@ -145,6 +160,7 @@ impl Book {
         if let Some(t) = self.transactions.iter_mut().find(|t| t.id == id && !t.deleted) {
             t.deleted = true;
             t.updated_at = env.now();
+            self.changes.push(Change::Transaction(id.to_string()));
         }
     }
 
@@ -160,6 +176,7 @@ impl Book {
             Some(slot) => *slot = b,
             None => self.budgets.push(b),
         }
+        self.changes.push(Change::Budget(id.clone()));
         id
     }
 
@@ -181,6 +198,7 @@ impl Book {
             note: note.into(),
             counts_toward_budget: kind == Kind::Expense && counts,
         });
+        self.changes.push(Change::Transaction(id.clone()));
         id
     }
 }

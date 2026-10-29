@@ -375,7 +375,8 @@ Never sync computed values (balances, allowances, pot balances).
 Full reference: [makepad-docs.md](makepad-docs.md) (setup, app skeleton, Splash rules, widgets, events, Wallet mapping).
 
 - Makepad 2.0 (Feb 2026): UI in Splash via `script_mod!`, live-editable without recompiling; Rust underneath.
-- Android build (from the makepad checkout): `cargo run -p cargo-makepad --release -- android toolchain-install`, then `cargo run -p cargo-makepad --release -- android --package-name=com.escillex.wallet --app-label="Wallet" run -p <app>`.
+- Android build (from the makepad checkout): `cargo run -p cargo-makepad --release -- android --full-ndk toolchain-install`, then `cargo run -p cargo-makepad --release -- android --package-name=com.escillex.wallet --app-label="Wallet" run -p <app>`.
+- `--full-ndk` is needed because `wallet-store` compiles SQLite from C (rusqlite `bundled`), and the default stripped NDK seems to lack the C headers.
 - Look at the official Finance demo app on makepad.nl first.
 - Prototype the risky screens first: amount entry (text input, drag-to-adjust), the endless wallet dial, the calendar grid.
 - Haptics, file picker for `.escb`, and notifications may need Android glue.

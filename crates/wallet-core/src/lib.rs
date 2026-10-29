@@ -8,6 +8,6 @@ pub mod model;
 pub mod money;
 pub mod sync;
 
-pub use book::{Book, Env};
+pub use book::{Book, Change, Env};
 pub use date::Date;
 pub use model::{Budget, Kind, Theme, Transaction, Wallet};
