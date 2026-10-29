@@ -3,7 +3,11 @@
 
 pub mod book;
 pub mod budget;
+pub mod calendar;
+pub mod currency;
 pub mod date;
+pub mod entry;
+pub mod history;
 pub mod model;
 pub mod money;
 pub mod sync;

@@ -33,7 +33,29 @@ impl Date {
     pub fn days_until(self, other: Date) -> i64 {
         to_days(other) - to_days(self)
     }
+
+    /// 0 = Monday … 6 = Sunday.
+    pub fn weekday(self) -> u32 {
+        (to_days(self) + 3).rem_euclid(7) as u32 // 1970-01-01 was a Thursday
+    }
+
+    pub fn first_of_month(self) -> Date {
+        Date { day: 1, ..self }
+    }
+
+    pub fn days_in_month(self) -> u32 {
+        days_in_month(self.year, self.month)
+    }
+
+    /// The first of the month `n` months away.
+    pub fn add_months(self, n: i32) -> Date {
+        let m = self.year * 12 + self.month as i32 - 1 + n;
+        Date { year: m.div_euclid(12), month: m.rem_euclid(12) as u32 + 1, day: 1 }
+    }
 }
+
+pub const WEEKDAYS: [&str; 7] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+pub const MONTHS: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 impl fmt::Display for Date {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -102,6 +124,15 @@ mod tests {
         assert!(Date::parse("2026-2-01").is_none());
         assert!(Date::parse("2026-13-01").is_none());
         assert!(Date::parse("nope").is_none());
+    }
+
+    #[test]
+    fn weekday_and_months() {
+        assert_eq!(d("2026-10-29").weekday(), 3); // Thursday
+        assert_eq!(d("2026-10-26").weekday(), 0);
+        assert_eq!(d("2026-11-15").add_months(2).to_string(), "2027-01-01");
+        assert_eq!(d("2026-01-15").add_months(-1).to_string(), "2025-12-01");
+        assert_eq!(d("2028-02-10").days_in_month(), 29);
     }
 
     #[test]
