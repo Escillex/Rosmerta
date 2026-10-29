@@ -1,3 +1,11 @@
 [workspace]
 resolver = "3"
-members = ["crates/wallet-core", "crates/wallet-store"]
+members = ["crates/wallet-core", "crates/wallet-import", "crates/wallet-store"]
+
+# 600,000 PBKDF2 rounds take minutes unoptimised; keep the crypto fast in tests.
+[profile.dev.package.sha2]
+opt-level = 3
+[profile.dev.package.pbkdf2]
+opt-level = 3
+[profile.dev.package.hmac]
+opt-level = 3
